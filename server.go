@@ -53,32 +53,28 @@ func (this *Server) BroadCast(user *User, msg string) {
 // 执行业务逻辑方法
 func (this *Server) Handler(conn net.Conn) {
 	//用户上线，加入用户列表OnlineMap中
-	user := NewUser(conn)
-
-	this.MapLock.Lock()
-	this.OnlineMap[user.Name] = user
-	this.MapLock.Unlock()
-	//把上线信息广播到所有在线用户中
-	this.BroadCast(user, "上线")
+	user := NewUser(conn, this)
+	user.Online()
 
 	//广播用户发送的消息
-	go func(){
-		buf := make([]byte,4096)
+	go func() {
+		buf := make([]byte, 4096)
 
-		for{
-			n,err := conn.Read(buf)
-			if n == 0{
-				//广播用户下线消息
-				this.BroadCast(user,"下线")
+		for {
+			n, err := conn.Read(buf)
+			if n == 0 {
+				user.Offline()
 				return
 			}
-			if err != nil && err != io.EOF{
-				fmt.Println("Read error:",err)
+			if err != nil && err != io.EOF {
+				fmt.Println("Read error:", err)
 				return
 			}
 
-			//广播用户发送信息,去除末尾'\n'
-			this.BroadCast(user,string(buf[:n - 1]))
+			//客户端信息(去除末尾'\n')
+			msg := string(buf[:n - 1])
+			//用户处理信息
+			user.DoMessage(msg)
 		}
 	}()
 
