@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 )
@@ -11,6 +12,9 @@ type Client struct {
 	Name      string
 	Conn      net.Conn
 }
+
+var serverIp string
+var serverPort int
 
 func NewClient(severip string, serverport int) *Client {
 	client := &Client{
@@ -29,12 +33,18 @@ func NewClient(severip string, serverport int) *Client {
 	return client
 }
 
+func init() {
+	flag.StringVar(&serverIp, "ip", "127.0.0.1", "设置服务器IP地址(默认127.0.0.1)")
+	flag.IntVar(&serverPort, "port", 8888, "设置服务器端口号(默认8888)")
+}
+
 func main() {
-	client := NewClient("127.0.0.1", 8888)
+	flag.Parse()
+	client := NewClient(serverIp, serverPort)
 	if client == nil {
 		fmt.Println("链接服务器失败")
 		return
 	}
-	fmt.Println("链接服务器成功")
+	fmt.Println("链接服务器成功\n", "IP:", serverIp, "POST:", serverPort)
 	select {}
 }
