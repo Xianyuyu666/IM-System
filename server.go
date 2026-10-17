@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"sync"
 )
@@ -58,7 +59,28 @@ func (this *Server) Handler(conn net.Conn) {
 	this.OnlineMap[user.Name] = user
 	this.MapLock.Unlock()
 	//把上线信息广播到所有在线用户中
-	this.BroadCast(user, "上线了")
+	this.BroadCast(user, "上线")
+
+	//广播用户发送的消息
+	go func(){
+		buf := make([]byte,4096)
+
+		for{
+			n,err := conn.Read(buf)
+			if n == 0{
+				//广播用户下线消息
+				this.BroadCast(user,"下线")
+				return
+			}
+			if err != nil && err != io.EOF{
+				fmt.Println("Read error:",err)
+				return
+			}
+
+			//广播用户发送信息,去除末尾'\n'
+			this.BroadCast(user,string(buf[:n - 1]))
+		}
+	}()
 
 	//handler阻塞
 	select {}
