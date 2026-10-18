@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"net"
+	"os"
 )
 
 type Client struct {
@@ -53,6 +55,27 @@ func NewClient(severip string, serverport int) *Client {
 	return client
 }
 
+// 客户端处理服务器回复信息的方法
+func (client *Client) DealResponse() {
+	//一旦服务器发送信息直接打印到屏幕，永久阻塞等待
+	io.Copy(os.Stdout, client.Conn)
+}
+
+// 客户端更新用户名的方法
+func (client *Client) Rename() bool {
+	var newName string
+	fmt.Print("请输入新用户名:")
+	fmt.Scanln(&newName)
+
+	msg := "rename|" + newName + "\n"
+	_, err := client.Conn.Write([]byte(msg))
+	if err != nil {
+		fmt.Println("Conn.Write error", err)
+		return false
+	}
+	return true
+}
+
 func (client *Client) Run() {
 	for client.flag != 0 {
 		for client.menu() != true {
@@ -63,7 +86,7 @@ func (client *Client) Run() {
 		case 2:
 			fmt.Println(2)
 		case 3:
-			fmt.Println(3)
+			client.Rename()
 		case 4:
 			fmt.Println(">>>退出成功")
 			return
@@ -83,6 +106,9 @@ func main() {
 		fmt.Println(">>>链接服务器失败")
 		return
 	}
+
+	go client.DealResponse()
+
 	fmt.Println(">>>链接服务器成功\n", "IP:", serverIp, "POST:", serverPort)
 	client.Run()
 }
