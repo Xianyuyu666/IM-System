@@ -97,7 +97,7 @@ func (this *Server) Handler(conn net.Conn) {
 		select {
 		case <-isLive:
 			//用户活跃，进入下一轮循环 = 重新计时
-		case <-time.After(time.Second * 30):
+		case <-time.After(time.Second * 120):
 			//超时未活跃，强制下线
 			user.SendMsg("超时未活跃，你已被踢\n")
 			return

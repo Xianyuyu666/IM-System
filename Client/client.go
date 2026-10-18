@@ -64,7 +64,7 @@ func (client *Client) DealResponse() {
 // 客户端更新用户名的方法
 func (client *Client) Rename() bool {
 	var newName string
-	fmt.Print("请输入新用户名:")
+	fmt.Print(">>>请输入新用户名: \n")
 	fmt.Scanln(&newName)
 
 	msg := "rename|" + newName + "\n"
@@ -76,13 +76,36 @@ func (client *Client) Rename() bool {
 	return true
 }
 
+func (client *Client) PublicChat() {
+	for {
+		//提示用户输入信息
+		var msg string
+		fmt.Print(">>>请输入广播信息(exit退出): \n")
+		fmt.Scanln(&msg)
+		if msg == "" {
+			fmt.Println(">>>消息不可为空!")
+			continue
+		} else if msg == "exit" {
+			fmt.Println(">>>已退出公聊模式")
+			break
+		}
+
+		//发送到服务器
+		_, err := client.Conn.Write([]byte(msg + "\n"))
+		if err != nil {
+			fmt.Println("Conn.Write error", err)
+			return
+		}
+	}
+}
+
 func (client *Client) Run() {
-	for client.flag != 0 {
+	for client.flag != 4 {
 		for client.menu() != true {
 		}
 		switch client.flag {
 		case 1:
-			fmt.Println(1)
+			client.PublicChat()
 		case 2:
 			fmt.Println(2)
 		case 3:
