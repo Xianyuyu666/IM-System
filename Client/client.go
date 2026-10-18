@@ -80,7 +80,7 @@ func (client *Client) PublicChat() {
 	for {
 		//提示用户输入信息
 		var msg string
-		fmt.Print(">>>请输入广播信息(exit退出): \n")
+		fmt.Println(">>>请输入广播信息(exit退出):")
 		fmt.Scanln(&msg)
 		if msg == "" {
 			fmt.Println(">>>消息不可为空!")
@@ -99,6 +99,38 @@ func (client *Client) PublicChat() {
 	}
 }
 
+func (client *Client) PrivateChat() {
+	//打印提示当前在线用户
+	if _, err := client.Conn.Write([]byte("who\n")); err != nil {
+		fmt.Println("Conn.Write error", err)
+		return
+	}
+	//获取私聊对象
+	var Name string
+	fmt.Println(">>>请输入要私聊对象[用户名](exit退出): ")
+	fmt.Scanln(&Name)
+
+	if Name != "exit" {
+		for {
+			//获取发送信息
+			var msg string
+			fmt.Println(">>>请输入要发送的信息(exit退出): ")
+			fmt.Scanln(&msg)
+			if msg == "exit" {
+				fmt.Println(">>>已退出私聊模式")
+				break
+			}
+			//包装成协议信息发送服务器
+			sendmsg := "to|" + Name + "|" + msg + "\n"
+			_, err := client.Conn.Write([]byte(sendmsg))
+			if err != nil {
+				fmt.Println("Conn.Write error", err)
+				break
+			}
+		}
+	}
+}
+
 func (client *Client) Run() {
 	for client.flag != 4 {
 		for client.menu() != true {
@@ -107,7 +139,7 @@ func (client *Client) Run() {
 		case 1:
 			client.PublicChat()
 		case 2:
-			fmt.Println(2)
+			client.PrivateChat()
 		case 3:
 			client.Rename()
 		case 4:
